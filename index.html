@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+        integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="qwixx.css">
+    <title>Qwixx Solver</title>
+</head>
+
+<body>
+    <div id="qwixx">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="qwixx-die-row">
+                        <div v-for="(x, i) in dice" :class="[ 'qwixx-die', 'qwixx-die--' + x.color ]"
+                            v-on:click="onClickDie(i)">
+                            <span v-if="x.value == 1"><i class="fa fa-dice-one"></i></span>
+                            <span v-if="x.value == 2"><i class="fa fa-dice-two"></i></span>
+                            <span v-if="x.value == 3"><i class="fa fa-dice-three"></i></span>
+                            <span v-if="x.value == 4"><i class="fa fa-dice-four"></i></span>
+                            <span v-if="x.value == 5"><i class="fa fa-dice-five"></i></span>
+                            <span v-if="x.value == 6"><i class="fa fa-dice-six"></i></span>
+                            <span v-if="x.value == 7"><i class="fa fa-times"></i></span>
+                        </div>
+                        <div class="qwixx-die qwixx-die--rand" v-on:click="randomize()">
+                            <span><i class="fa fa-dice"></i></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="qwixx-row qwixx-row--red">
+                        <div v-for="(x, i) in redUi"
+                            :class="[ 'qwixx-cell', (x.selected ? 'qwixx-cell--selected' : ''), (x.recommended ? 'qwixx-cell--recommended' : '') ]"
+                            v-on:click="onClick(0, i)">
+                            <span class="qwixx-value">{{ x.value }}</span>
+                            <span class="qwixx-score" v-show="x.score >= 0">{{ x.score }}</span>
+                        </div>
+                        <div :class="[ 'qwixx-cell', (redLocked ? 'qwixx-cell--selected' : '') ]"
+                            v-on:click="onClick(0, 12)">
+                            <i class="fa fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="qwixx-row qwixx-row--yellow">
+                        <div v-for="(x, i) in yellowUi"
+                            :class="[ 'qwixx-cell', (x.selected ? 'qwixx-cell--selected' : ''), (x.recommended ? 'qwixx-cell--recommended' : '') ]"
+                            v-on:click="onClick(1, i)">
+                            <span class="qwixx-value">{{ x.value }}</span>
+                            <span class="qwixx-score" v-show="x.score >= 0">{{ x.score }}</span>
+                        </div>
+                        <div :class="[ 'qwixx-cell', (yellowLocked ? 'qwixx-cell--selected' : '') ]"
+                            v-on:click="onClick(1, 12)">
+                            <i class="fa fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="qwixx-row qwixx-row--green">
+                        <div v-for="(x, i) in greenUi"
+                            :class="[ 'qwixx-cell', (x.selected ? 'qwixx-cell--selected' : ''), (x.recommended ? 'qwixx-cell--recommended' : '') ]"
+                            v-on:click="onClick(2, i)">
+                            <span class="qwixx-value">{{ x.value }}</span>
+                            <span class="qwixx-score" v-show="x.score >= 0">{{ x.score }}</span>
+                        </div>
+                        <div :class="[ 'qwixx-cell', (greenLocked ? 'qwixx-cell--selected' : '') ]"
+                            v-on:click="onClick(2, 12)">
+                            <i class="fa fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="qwixx-row qwixx-row--blue">
+                        <div v-for="(x, i) in blueUi"
+                            :class="[ 'qwixx-cell', (x.selected ? 'qwixx-cell--selected' : ''), (x.recommended ? 'qwixx-cell--recommended' : '') ]"
+                            v-on:click="onClick(3, i)">
+                            <span class="qwixx-value">{{ x.value }}</span>
+                            <span class="qwixx-score" v-show="x.score >= 0">{{ x.score }}</span>
+                        </div>
+                        <div :class="[ 'qwixx-cell', (blueLocked ? 'qwixx-cell--selected' : '') ]"
+                            v-on:click="onClick(3, 12)">
+                            <i class="fa fa-lock"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="qwixx-die-penalty">
+                        <div :class="[ 'qwixx-penalty', (penaltyUi.recommended && penalty == 0 ? 'qwixx-penalty--recommended' : '') ]" v-on:click="penalize(1)">
+                            <span><i class="fa fa-times" v-if="penalty >= 1"></i></span>
+                            <span class="qwixx-score" v-if="penaltyUi.score >= 0 && penalty == 0">{{ penaltyUi.score }}</span>
+                        </div>
+                        <div :class="[ 'qwixx-penalty', (penaltyUi.recommended && penalty == 1 ? 'qwixx-penalty--recommended' : '') ]" v-on:click="penalize(2)">
+                            <span><i class="fa fa-times" v-if="penalty >= 2"></i></span>
+                            <span class="qwixx-score" v-if="penaltyUi.score >= 0 && penalty == 1">{{ penaltyUi.score }}</span>
+                        </div>
+                        <div :class="[ 'qwixx-penalty', (penaltyUi.recommended && penalty == 2 ? 'qwixx-penalty--recommended' : '') ]" v-on:click="penalize(3)">
+                            <span><i class="fa fa-times" v-if="penalty >= 3"></i></span>
+                            <span class="qwixx-score" v-if="penaltyUi.score >= 0 && penalty == 2">{{ penaltyUi.score }}</span>
+                        </div>
+                        <div :class="[ 'qwixx-penalty', (penaltyUi.recommended && penalty == 3 ? 'qwixx-penalty--recommended' : '') ]" v-on:click="penalize(4)">
+                            <span><i class="fa fa-times" v-if="penalty >= 4"></i></span>
+                            <span class="qwixx-score" v-if="penaltyUi.score >= 0 && penalty == 3">{{ penaltyUi.score }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+    <script src="qwixx.js"></script>
+</body>
+
+</html>
